@@ -1,6 +1,7 @@
 package com.michalsikora.flickrbrowser;
 
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -14,7 +15,7 @@ import java.util.List;
  * Created by Mike on 20.03.2018.
  */
 
-class GetFlickrJsonData implements GetRawData.OnDownloadComplete {
+class GetFlickrJsonData extends AsyncTask<String, Void, List<Photo>> implements GetRawData.OnDownloadComplete {
 
     private static final String TAG = "GetFlickrJsonData";
 
@@ -24,12 +25,13 @@ class GetFlickrJsonData implements GetRawData.OnDownloadComplete {
     private boolean mMatchAll;
 
     private final OnDataAvailable mCallBack;
+    private boolean runningOnSameThread = false;
 
     interface OnDataAvailable {
         void onDataAvailable(List<Photo> data, DownloadStatus status);
     }
 
-    public GetFlickrJsonData(String language, boolean matchAll, OnDataAvailable callBack, String baseURL) {
+    public GetFlickrJsonData(OnDataAvailable callBack, String baseURL, String language, boolean matchAll) {
         Log.d(TAG, "GetFlickrJsonData called");
         mBaseURL = baseURL;
         mLanguage = language;
@@ -39,6 +41,7 @@ class GetFlickrJsonData implements GetRawData.OnDownloadComplete {
 
     void executeOnSameThread(String searchCriteria) {
         Log.d(TAG, "executeOnSameThread starts");
+        runningOnSameThread = true;
         String destinationUri = createUri(searchCriteria, mLanguage, mMatchAll);
 
         GetRawData getRawData = new GetRawData(this);
@@ -46,9 +49,30 @@ class GetFlickrJsonData implements GetRawData.OnDownloadComplete {
         Log.d(TAG, "executeOnSameThread ends");
     }
 
+    @Override
+    protected void onPostExecute(List<Photo> photos) {
+        Log.d(TAG, "onPostExecute starts");
+
+        if (mCallBack != null) {
+            mCallBack.onDataAvailable(mPhotoList, DownloadStatus.OK);
+        }
+
+        Log.d(TAG, "onPostExecute ends");
+    }
+
+    @Override
+    protected List<Photo> doInBackground(String... params) {
+        Log.d(TAG, "doInBackground starts");
+        String destinationUri = createUri(params[0], mLanguage,mMatchAll);
+
+        GetRawData getRawData = new GetRawData(this);
+        getRawData.runInSameThread(destinationUri);
+        Log.d(TAG, "doInBackground ends");
+        return mPhotoList;
+    }
+
     private String createUri(String searchCriteria, String lang, boolean matchAll) {
         Log.d(TAG, "createUri starts");
-
 
         return Uri.parse(mBaseURL).buildUpon()
                 .appendQueryParameter("tags",searchCriteria)
@@ -94,7 +118,7 @@ class GetFlickrJsonData implements GetRawData.OnDownloadComplete {
                 status = DownloadStatus.FAILED_OR_EMPTY;
             }
 
-            if (mCallBack != null) {
+            if (runningOnSameThread && mCallBack != null) {
                 // informing the caller that processing is done - possibly return null if error occurs
                 mCallBack.onDataAvailable(mPhotoList, status);
             }

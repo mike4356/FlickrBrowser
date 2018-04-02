@@ -1,11 +1,14 @@
 package com.michalsikora.flickrbrowser;
 
+import java.io.Serializable;
+
 /**
  * Created by Mike on 20.03.2018.
  */
 
-class Photo {
+class Photo implements Serializable{
 
+    private static final long serialVersionUID = 1L;
     private String mTitle;
     private String mAuthor;
     private String mAuthorId;
@@ -13,7 +16,7 @@ class Photo {
     private String mTags;
     private String mImage;
 
-    public Photo(String title, String author, String authorId, String link, String tags, String image) {
+    public Photo (String title, String author, String authorId, String link, String tags, String image) {
         mTitle = title;
         mAuthor = author;
         mAuthorId = authorId;

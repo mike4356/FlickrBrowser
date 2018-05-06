@@ -1,6 +1,7 @@
 package com.michalsikora.flickrbrowser;
 
 import android.content.Intent;
+import android.content.res.Resources;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -19,11 +20,15 @@ public class PhotoDetailActivity extends BaseActivity {
         Intent intent = getIntent();
         Photo photo = (Photo) intent.getSerializableExtra(PHOTO_TRANSFER);
         if (photo != null) {
+
             TextView photoTitle = (TextView) findViewById(R.id.photo_title);
-            photoTitle.setText("Title: " + photo.getTitle());
+            Resources resources = getResources();
+            photoTitle.setText(resources.getString(R.string.photo_title_text, photo.getTitle()));
+//            photoTitle.setText("Title: " + photo.getTitle());
 
             TextView photoTags = (TextView) findViewById(R.id.photo_tags);
-            photoTags.setText("Tags: " + photo.getTags());
+            photoTags.setText(resources.getString(R.string.photo_tags_text, photo.getTags()));
+//            photoTags.setText("Tags: " + photo.getTags());
 
             TextView photoAuthor = (TextView) findViewById(R.id.photo_author);
             photoAuthor.setText(photo.getAuthor());
